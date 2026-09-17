@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aufmaß Manager</title><link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header><div><h1>Aufmaß Manager</h1><small>ETAP 64 · Web na komputer</small></div><div id="accountBadge"></div></header>
+<div id="loginView" class="center">
+<section class="card auth">
+<h2>Logowanie</h2>
+<input id="email" type="email" autocomplete="username" placeholder="E-mail">
+<input id="password" type="password" autocomplete="current-password" placeholder="Hasło">
+<input id="projectUrl" placeholder="Supabase URL" value="https://myxyqulfmzlkncpvuxmn.supabase.co">
+<input id="publishableKey" type="text" placeholder="Supabase Publishable Key" autocomplete="off">
+<div class="row"><button id="loginBtn">Zaloguj</button><button id="signupBtn">Utwórz konto</button></div>
+<p id="loginMsg"></p>
+<p class="muted small">Klucz publishable jest bezpieczny do użycia w aplikacji klienckiej. Nie wpisuj tutaj service_role key.</p>
+</section>
+</div>
+<div id="appView" hidden>
+<nav>
+<button data-view="dashboard">Pulpit</button><button data-view="projects">Projekty</button><button data-view="lv">LV</button><button data-view="plans">Plany</button><button data-view="measurements">Pomiary</button><button data-view="files">Zdjęcia i pliki</button><button data-view="sync">☁ Synchronizacja</button><button id="logoutBtn">Wyloguj</button>
+</nav><main id="content"></main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+</body></html>
