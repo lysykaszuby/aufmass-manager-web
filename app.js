@@ -2,13 +2,50 @@ const DEFAULT_URL='https://myxyqulfmzlkncpvuxmn.supabase.co';
 const state={url:localStorage.getItem('am_supabase_url')||DEFAULT_URL,key:localStorage.getItem('am_supabase_key')||'',email:localStorage.getItem('am_email')||'',client:null,session:null,data:null,lastSync:null};
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function entityData(x){
+  if(!x || typeof x!=='object') return {};
+  const d=(x.data && typeof x.data==='object' && !Array.isArray(x.data)) ? x.data : x;
+  return d;
+}
 function flattenMeasurements(projects){
   const out=[];
-  for(const project of (projects||[])){
-    for(const position of (project.positions||[])){
-      for(const m of (position.measurements||[])){
-        out.push({...m,projectName:project.name||'',projectNo:project.projectNo||'',positionNo:position.no||'',positionShort:position.short||''});
+  const seen=new Set();
+  for(const rawProject of (projects||[])){
+    const project=entityData(rawProject);
+    const projectName=project.name||rawProject.name||'';
+    const projectNo=project.projectNo||rawProject.projectNo||'';
+    const positions=Array.isArray(project.positions)?project.positions:[];
+    for(const rawPosition of positions){
+      const position=entityData(rawPosition);
+      const positionNo=position.no||rawPosition.no||'';
+      const positionShort=position.short||rawPosition.short||'';
+      const measurements=Array.isArray(position.measurements)?position.measurements:[];
+      for(const rawM of measurements){
+        const m=entityData(rawM);
+        const key=m.syncId||rawM.syncId||m.id||rawM.id||`${projectName}|${positionNo}|${out.length}`;
+        if(seen.has(String(key))) continue;
+        seen.add(String(key));
+        out.push({
+          ...m,
+          projectName,
+          projectNo,
+          positionNo,
+          positionShort,
+          line:m.line??rawM.line??'',
+          room:m.room??rawM.room??'',
+          qty:m.qty??m.q??m.quantity??rawM.qty??rawM.q??rawM.quantity??'',
+          updatedAt:m.updatedAt??rawM.updatedAt??position.updatedAt??project.updatedAt??''
+        });
       }
+    }
+    // Compatibility with states where measurements were stored directly on the project.
+    const direct=Array.isArray(project.measurements)?project.measurements:[];
+    for(const rawM of direct){
+      const m=entityData(rawM);
+      const key=m.syncId||rawM.syncId||m.id||rawM.id||`${projectName}|direct|${out.length}`;
+      if(seen.has(String(key))) continue;
+      seen.add(String(key));
+      out.push({...m,projectName,projectNo,positionNo:m.positionNo||'',positionShort:'',line:m.line??'',room:m.room??'',qty:m.qty??m.q??m.quantity??'',updatedAt:m.updatedAt??project.updatedAt??''});
     }
   }
   return out;
@@ -17,7 +54,7 @@ function arrays(){
   const d=state.data||{};
   const projects=d.projects||[];
   const nested=flattenMeasurements(projects);
-  const measurements=(d.measurements&&d.measurements.length)?d.measurements:nested;
+  const measurements=(Array.isArray(d.measurements)&&d.measurements.length)?d.measurements:nested;
   return {projects,lvCatalogs:d.lvCatalogs||[],savedPlans:d.savedPlans||[],measurements,changeLog:d.changeLog||[]}
 }
 function msg(text,ok=false){$('loginMsg').innerHTML=`<span class="${ok?'ok':'err'}">${esc(text)}</span>`}
